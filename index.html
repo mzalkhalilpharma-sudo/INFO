@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دليل تعاملات الشركات والتأمين الطبية</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts - Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        petroleum: {
+                            50: '#fffbebf',
+                            100: '#fef3c7',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                        },
+                        insurance: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    },
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f8fafc;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.25s ease-in-out;
+        }
+        .card-shadow:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header Section -->
+    <header class="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-emerald-500 text-white p-2.5 rounded-xl text-xl shadow-lg shadow-emerald-500/30">
+                        <i class="fa-solid me-1 fa-file-medical"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-bold tracking-tight">دليل تعاملات الشركات والتأمين</h1>
+                        <p class="text-xs text-slate-400">المرجع السريع لصرف الروشتات والنماذج الطبية</p>
+                    </div>
+                </div>
+
+                <!-- Search & Filters Header Controls -->
+                <div class="w-full md:w-auto flex flex-col sm:flex-row gap-2">
+                    <div class="relative flex-grow sm:w-72">
+                        <i class="fa-solid fa-magnifying-glass absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="searchInput" placeholder="ابحث باسم الشركة أو الشروط..." 
+                            class="w-full pl-4 pr-10 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
+
+        <!-- Navigation Tabs / Category Filters -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-6 bg-white p-3 rounded-2xl border border-slate-200 card-shadow">
+            <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                <button onclick="filterCategory('all')" id="btn-all" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 bg-emerald-600 text-white shadow-sm">
+                    <i class="fa-solid fa-list-ul"></i> الكل <span id="count-all" class="bg-white/20 text-xs px-2 py-0.5 rounded-full">0</span>
+                </button>
+                <button onclick="filterCategory('petroleum')" id="btn-petroleum" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition text-slate-600 hover:bg-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-oil-well text-amber-500"></i> شركات البترول (Offline) <span id="count-petroleum" class="bg-slate-200 text-slate-700 text-xs px-2 py-0.5 rounded-full">0</span>
+                </button>
+                <button onclick="filterCategory('insurance')" id="btn-insurance" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition text-slate-600 hover:bg-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-blue-500"></i> شركات التأمين (Online) <span id="count-insurance" class="bg-slate-200 text-slate-700 text-xs px-2 py-0.5 rounded-full">0</span>
+                </button>
+            </div>
+
+            <button onclick="toggleModal('generalInstructionsModal')" class="text-sm bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-semibold px-4 py-2 rounded-xl transition flex items-center gap-2 w-full sm:w-auto justify-center">
+                <i class="fa-solid fa-circle-exclamation text-amber-600"></i> التعليمات العامة لجميع الشركات
+            </button>
+        </div>
+
+        <!-- Companies Grid Container -->
+        <div id="companiesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- Dynamic Cards Inserted via JS -->
+        </div>
+
+        <!-- Empty Search State -->
+        <div id="noResults" class="hidden text-center py-16">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 text-slate-400 mb-4 text-2xl">
+                <i class="fa-solid fa-folder-open"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-700">لم يتم العثور على أية نتائج</h3>
+            <p class="text-slate-500 text-sm mt-1">تأكد من كتابة الاسم بشكل صحيح أو جرب البحث بكلمة أخرى.</p>
+        </div>
+
+    </main>
+
+    <!-- Modal for General Instructions -->
+    <div id="generalInstructionsModal" class="fixed inset-0 bg-slate-900/60 z-50 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 relative max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center pb-4 border-b border-slate-100 mb-4">
+                <div class="flex items-center gap-2 text-amber-600">
+                    <i class="fa-solid fa-clipboard-check text-xl"></i>
+                    <h3 class="text-lg font-bold text-slate-800">التعليمات العامة لجميع الشركات</h3>
+                </div>
+                <button onclick="toggleModal('generalInstructionsModal')" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4 text-sm text-slate-700 overflow-y-auto pl-2 pr-1">
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="font-bold text-slate-900 block mb-1">1. استيفاء البيانات العامة:</span>
+                    البيانات كاملة على كل نماذج الأدوية والروشتة الخارجية، وتتضمن: (الاسم / تاريخ الكشف / التشخيص / ختم الجهة الطبية / رقم الكارنيه).
+                </div>
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="font-bold text-slate-900 block mb-1">2. قواعد التوقيع:</span>
+                    التوقيع ضروري جداً لكل الروشتات.
+                    <ul class="list-disc list-inside mt-1 space-y-1 text-slate-600">
+                        <li>التوقيع أساسي وضروري على (الروشتة والخطاب والكارنيه والبطاقة) في شركة (العامرية لتكرير البترول).</li>
+                        <li>التوقيع أساسي على الأونلاين في شركة (D.M.S).</li>
+                    </ul>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="font-bold text-slate-900 block mb-1">3. المرفقات والصلاحية:</span>
+                    إرفاق البطاقة والكارنيه مع التأكد دائماً من صلاحية الكارنيه.
+                </div>
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="font-bold text-slate-900 block mb-1">4. مدد الصرف:</span>
+                    الصرف حسب تعليمات الشركة للمدة ولا يتعدى للشركات أكثر من شهر إلا في حالات خاصة لبعض الشركات.
+                </div>
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="font-bold text-slate-900 block mb-1">5. تجاوز الحد الأقصى:</span>
+                    من الممكن دفع ما فوق الحد الأقصى للشركات <span class="font-bold text-red-600">ما عدا</span> شركتي (<span class="underline">العامرية</span> و <span class="underline">بترومنت</span> لا يتم دفع ما فوق الحد الأقصى نهائياً).
+                </div>
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="font-bold text-slate-900 block mb-1">6. التعديلات:</span>
+                    في حالة وجود تعديل على الروشتة، يلزم إضافة ختم آخر على التعديل.
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 mt-4 text-left">
+                <button onclick="toggleModal('generalInstructionsModal')" class="bg-slate-800 text-white text-sm font-semibold px-5 py-2 rounded-xl hover:bg-slate-700 transition">
+                    إغلاق
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-6 border-t border-slate-800 text-center text-xs mt-auto">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>دليل تعاملات الشركات الطبية والتأمين - منظومة إدارة الصرف للصيدليات</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        const companiesData = [
+            // offline / petroleum companies
+            {
+                id: 'petromaint',
+                name: 'شركة بترومنت (Petromaint)',
+                type: 'petroleum',
+                details: [
+                    'تُصرف على نموذج الشركة الأصفر في وجود ختم الشركة وختم الجهة الطبية المحددة على النموذج.',
+                    'تُصرف على روشتة خارجية مختومة بختم الشركة مع إرفاق النموذج.',
+                    'صلاحية النموذج الأصفر (شهرين)، والنموذج الأبيض (أسبوع - لحين إشعار آخر).',
+                    'الحد الأقصى 1000 جنيه (ولا يتم دفع ما فوق الحد الأقصى نهائياً).',
+                    'إرفاق بطاقة العامل أساسي.',
+                    'موانع الصرف: (التراكيب / الأدوية غير المسعرة رسمياً / مستحضرات التجميل والشامبوهات / الألبان).'
+                ]
+            },
+            {
+                id: 'sidpec',
+                name: 'شركة سيدبك (Sidpec)',
+                type: 'petroleum',
+                details: [
+                    'الصرف على نموذج الشركة + روشتة خارجية.',
+                    'صلاحية النموذج والروشتة: شهر.',
+                    'الحد الأقصى: 2000 جنيه على الأجل (موافقة واتساب تُعدي الحد الأقصى).',
+                    'التوقيع أساسي مع إرفاق كارنيه المريض وبطاقة المستلم.',
+                    'موانع الصرف: التجميل والشامبوهات.'
+                ]
+            },
+            {
+                id: 'petrochemicals',
+                name: 'البتروكيماويات',
+                type: 'petroleum',
+                details: [
+                    'تُصرف للأسر فقط.',
+                    'تُصرف روشتة خارجية مختومة بختم الجهة الطبية.',
+                    'إرفاق كارنيه المريض المدون عليه تاريخ الانتهاء (كارنيه ساري).',
+                    'الختم الأحمر: الأمراض المزمنة تدخل بنسبة 100%.',
+                    'الختم الأزرق: تدخل بنسبة 50%.'
+                ]
+            },
+            {
+                id: 'ezz_aldakhila',
+                name: 'عز الدخيلة',
+                type: 'petroleum',
+                details: [
+                    'تُصرف على نماذج الشركة فقط مختومة بختم حي من عز.',
+                    'تُصرف خلال صلاحية تاريخ النموذج.',
+                    'إرفاق صورة البطاقة والكارنيه والتوقيع على النموذج.',
+                    'الأخذ بالملاحظات من نسبة تحمل أو حد أقصى أو موجهة لصيدلية أخرى.'
+                ]
+            },
+            {
+                id: 'solb_aldakhila',
+                name: 'جمعية صلب الدخيلة',
+                type: 'petroleum',
+                details: [
+                    'ميل + روشتة: إرفاق خطاب مدون عليه اسم المريض وعدد الروشتات (الحد الأقصى 1500 جنيه لمجموع روشتات الخطاب إن لم يحدد عليه حد أقصى).',
+                    'موانع الخطاب: المنشطات، التجميل، وأي دواء تتعدى قيمة الجرعة الواحدة 500 جنيه.',
+                    'نماذج الشركة: بختم حي من الجمعية (بدون حد أقصى) خلال صلاحية النموذج مع إرفاق البطاقة والكارنيه والتوقيع ومراعاة الملاحظات.'
+                ]
+            },
+            {
+                id: 'amoc',
+                name: 'اسكندرية للزيوت المعدنية (اموك - AMOC)',
+                type: 'petroleum',
+                details: [
+                    'نموذج الشركة الأصفر (ختم الشركة + الجهة الطبية): حد أقصى 1500 جنيه (يمكن دفع ما فوق الحد الأقصى).',
+                    'نموذج الشركة (القطاع الطبي): بختم الشركة فقط وبدون حد أقصى.',
+                    'روشتة خارجية عليها ختم الشركة: حد أقصى 1500 جنيه.',
+                    'الختم الأحمر لتعدي الحد الأقصى.',
+                    'البيانات كاملة وإرفاق البطاقة والكارنيه. صلاحية النموذج والروشتة شهر.'
+                ]
+            },
+            {
+                id: 'anrpc',
+                name: 'انربك (ANRPC)',
+                type: 'petroleum',
+                details: [
+                    'الصرف على الروشتة الخارجية في وجود ختم الشركة.',
+                    'أو على نموذج الشركة بوجود ختم الشركة وختم الجهة الطبية.',
+                    'أو نموذج القطاع الطبي بوجود ختم الشركة وختم القطاع الطبي.',
+                    'الحد الأقصى 2000 جنيه، وفي حالة الموافقة بختم أحمر لتعدي الحد الأقصى.'
+                ]
+            },
+            {
+                id: 'ethydco',
+                name: 'المصرية للإيثلين (إيثديكو - Ethydco)',
+                type: 'petroleum',
+                details: [
+                    'الصرف على روشتة خارجية ونماذج الشركة.',
+                    'بدون حد أقصى مع تطبيق موانع الصرف (المستلزمات، التجميل، والتراكيب) إلا في وجود ختم الشركة.',
+                    'إرفاق الكارنيه والبطاقة والتوقيع.'
+                ]
+            },
+            {
+                id: 'drinking_water',
+                name: 'مياه الشرب',
+                type: 'petroleum',
+                details: [
+                    'إرفاق نموذج الشركة وصورة الروشتة (كلاهما عليه اختام الشركة: الختم المدور والمثلث).',
+                    'إرفاق كارنيه المريض وبطاقة المستلم.',
+                    'الصرف خلال الشهر المدون على النموذج.',
+                    'صرف الأدوية المظلل عليها والالتزام بعدد الأصناف ونسبة التحمل حسب صلة القرابة.'
+                ]
+            },
+            {
+                id: 'acpa',
+                name: 'اسكندرية للإضافات البترولية (اكبا - ACPA)',
+                type: 'petroleum',
+                details: [
+                    'نموذج الشركة بوجود ختم الشركة وختم الجهة الطبية (نموذج القطاع الطبي بختم الشركة فقط).',
+                    'الصرف على روشتة خارجية بوجود ختم الشركة.',
+                    'لا يوجد حد أقصى ولا موانع صرف.'
+                ]
+            },
+            {
+                id: 'amriya',
+                name: 'العامرية لتكرير البترول',
+                type: 'petroleum',
+                details: [
+                    'روشتة خارجية بوجود ختم الجهة الطبية (حد أقصى 1000 جنيه للروشتة ولا يتم دفع ما فوق الحد الأقصى).',
+                    'إرفاق الخطاب (يوجد 4 انواع: عاملين، أسر، والدين، جهات غير تعاقدية للروشتات الخارجية فقط).',
+                    'إرفاق كارنيه المستفيد وبطاقة المستلم والتوقيع على (الروشتة والخطاب والكارنيه والبطاقة).',
+                    'موانع الصرف: الألبان / التجميل / المستلزمات / المزمن.',
+                    'نموذج الشركة: بدون حد أقصى وحسب الكمية المدونة عليه خلال الشهر المدون.'
+                ]
+            },
+            {
+                id: 'soda_ash',
+                name: 'كربونات الصوديوم (الخدمات اللوجستية للبتروكيماويات - PLS)',
+                type: 'petroleum',
+                details: [
+                    'الصرف بدون حد أقصى مع إرفاق كارنيه المستفيد وبطاقة المستلم.',
+                    'في حالة الألبان، التجميل، المنشطات، والفيتامينات: الرجوع للشركة للموافقة قبل الصرف.'
+                ]
+            },
+            {
+                id: 'alex_petroleum',
+                name: 'اسكندرية للبترول',
+                type: 'petroleum',
+                details: [
+                    'نموذج الشركة (ختم الشركة + الجهة الطبية) أو روشتة خارجية بختم الشركة. الحد الأقصى 1000 جنيه.',
+                    'ختم مثلث إضافي لحالة الوالدين.',
+                    'ختم ثاني من الشركة لتعدي الحد الأقصى أو موافقة الألبان.',
+                    'ختم ثالث للموافقة على المستورد مع كتابة "لا مانع من صرف المستورد"، وختم ثالث Net للموافقة على الأصناف.',
+                    'استيفاء البيانات وإرفاق الكارنيه والبطاقة.'
+                ]
+            },
+            {
+                id: 'egypt_chemicals',
+                name: 'مصر لصناعة الكيماويات',
+                type: 'petroleum',
+                details: [
+                    'نموذج الشركة بختم الشركة وختم الجهة الطبية.',
+                    'روشتة خارجية مع وجود نموذج الشركة مرفق معها.',
+                    'الحد الأقصى: 750 جنيه.',
+                    'موانع الصرف: (ألبان / شامبوهات / تجميل). الصرف للأسر فقط.'
+                ]
+            },
+            {
+                id: 'abu_qir',
+                name: 'أبوقير للأسمدة',
+                type: 'petroleum',
+                details: [
+                    'نموذج الشركة مختوم بختم الجهة الطبية أو روشتة خارجية مرفق معها نموذج.',
+                    'الحد الأقصى: 2500 جنيه.',
+                    'تكرار العلاج: عند الصرف بصورة نموذج سابق يرفق نموذج جديد بختم النموذج السابق ومراعاة الملاحظات.',
+                    'المعاشات: ختم صندوق المحالين للتقاعد بتاريخ السنة + ختم الجهة الطبية.',
+                    'موانع الصرف: (حب الشباب / الصدفية / الهرمونات / المنشطات / الشامبوهات).'
+                ]
+            },
+            {
+                id: 'aspc',
+                name: 'اسبك (ASPC)',
+                type: 'petroleum',
+                details: [
+                    'روشتة خارجية أو نموذج شركة.',
+                    'المعاشات وأسر المتوفين: نسبة تحمل مدونة على الكارنيه من الخلف.',
+                    'نموذج الشركة: تتحدد نسبة التحمل على النموذج.',
+                    'إرفاق صورة الكارنيه من الجانبين والبطاقة.'
+                ]
+            },
+            {
+                id: 'eilap',
+                name: 'ايلاب (EILAP)',
+                type: 'petroleum',
+                details: [
+                    'الصرف على نموذج الشركة مختوم بختم عيادة ايلاب أو روشتة خارجية أصل.',
+                    'إرفاق صورة الكارنيه.'
+                ]
+            },
+            {
+                id: 'wepco',
+                name: 'ويبكو (بترول الصحراء الغربية - WEPCO)',
+                type: 'petroleum',
+                details: [
+                    'نموذج الشركة أو روشتة خارجية (إذا كانت صورة تكون مختومة بختم الشركة).',
+                    'لا يوجد حد أقصى.',
+                    'موانع الصرف: (المنشطات / موانع الحمل / الألبان / التجميل).'
+                ]
+            },
+            {
+                id: 'faisal_bank',
+                name: 'بنك فيصل',
+                type: 'petroleum',
+                details: [
+                    'روشتة خارجية مختومة بختم الجهة الطبية أو نموذج من البنك (الصورة تُختم من البنك).',
+                    'ضرورة إستيفاء بيانات المريض وصلة القرابة وصورة البطاقة من الجانبين أو الكارنيه.',
+                    'لا يتم صرف روشتات أمراض الجلدية.',
+                    'موانع الصرف: (المنشطات / المستورد غير الرسمي / شريحة السكر / التجميل / التخسيس / تساقط الشعر).'
+                ]
+            },
+            {
+                id: 'caritas',
+                name: 'كاريتاس (Caritas)',
+                type: 'petroleum',
+                details: [
+                    'النموذج الأبيض: ختم كاريتاس + ختم نسبة التحمل (في حالة 3 أشهر يختم 3 شهور).',
+                    'النموذج الأزرق: ختم كاريتاس + ختم نسبة التحمل + الالتزام بالحد الأقصى (في حالة 3 أشهر يختم 3 شهور).'
+                ]
+            },
+
+            // online / insurance companies
+            {
+                id: 'alico',
+                name: 'ALICO',
+                type: 'insurance',
+                details: [
+                    'تُصرف على النموذج الأزرق أو نموذج يداوي (لا يغني عن Icare).',
+                    'العلاج الشهري يُسحب من الأونلاين مباشرة مع التوقيع وإرفاق البطاقة والكارنيه.',
+                    'البيانات كاملة بالكربون وصلاحية النموذج 7 أيام. ختم الجهة الطبية أساسي.',
+                    'الحد الأقصى 1500 على الأجل (لا يجوز تقليل الكميات لتفادي تجاوز الحد الأقصى).',
+                    'متابعة الحمل والأسنان يجب أن تكون مغطاة على الكارنيه وليس بمجرد إدخال التشخيص.',
+                    'الموافقات المسبقة تكون بميل مع أصل النموذج الأزرق/يداي. صلاحية الميل 7 أيام.',
+                    'الانتباه لتجاوز الحد الائتماني (Exceeding limitation).'
+                ]
+            },
+            {
+                id: 'globemed',
+                name: 'GlobeMed',
+                type: 'insurance',
+                details: [
+                    'النموذج الأزرق أو روشتة خارجية مدون عليها البيانات والتشخيص وختم الجهة الطبية.',
+                    'النموذج الأبيض لجميع مقدمي الخدمة علاج لمدة أسبوعين فقط.',
+                    'في حالة E-Prescription: إرفاق صورة الروشتة/النموذج المسجل على I-care.',
+                    'تعديل السعر في حالة السعر أعلى على البون.',
+                    'صلاحية النموذج 7 أيام. الانتباه لتجاوز الحد الائتماني (Exceeding limitation).'
+                ]
+            },
+            {
+                id: 'axa',
+                name: 'AXA',
+                type: 'insurance',
+                details: [
+                    'نموذج الشركة (صلاحيته أسبوعين).',
+                    'روشتة خارجية في حالة كان مدون على الكارنيه السماح بالصرف.',
+                    'نموذج ONE HEALTH / نموذج يداوي.',
+                    'تدخل على بون واحد. إرسال ميل تعديل السعر في حالة السعر الأعلى.',
+                    'ختم الجهة الطبية والتوقيع أساسيان على النماذج.'
+                ]
+            },
+            {
+                id: 'medright',
+                name: 'Med Right',
+                type: 'insurance',
+                details: [
+                    'نموذج الشركة بكامل البيانات.',
+                    'إذن مسبق يتم سحبه من الأونلاين.',
+                    'العلاج الشهري يُدون على الأونلاين برقم الاستمارة المزمنة.',
+                    'إرفاق الكارنيه والبطاقة والتوقيع والصرف خلال صلاحية الأونلاين.',
+                    'مراعاة نسبة التحمل وتجاوز الحد التأميني.'
+                ]
+            },
+            {
+                id: 'mednet',
+                name: 'Med Net',
+                type: 'insurance',
+                details: [
+                    'نموذج الشركة وروشتة خارجية كلاهما مختومان بختم الجهة الطبية.',
+                    'إدخال جميع التشخيصات على الأونلاين في خانة (Diagnosis) وليس الملاحظات.',
+                    'الصرف في خلال صلاحية الأونلاين.',
+                    'الانتباه للشركات التي تم إيقاف التعامل معها.'
+                ]
+            },
+            {
+                id: 'nextcare',
+                name: 'Nextcare',
+                type: 'insurance',
+                details: [
+                    'النموذج الأصفر مختوم بختم الجهة الطبية، أو روشتة خارجية مع كتابة الملاحظات.',
+                    'وثيقة Allianz و CIB يمكن الصرف مباشرة بدون أونلاين بحد أقصى 1000 جنيه.',
+                    'إدخال جميع التشخيصات أونلاين ومراعاة الملاحظات والحد الأقصى أو المرفوضات.'
+                ]
+            },
+            {
+                id: 'alahly_projects',
+                name: 'الاهلي للمشروعات',
+                type: 'insurance',
+                details: [
+                    'إدخال رقم CLAIM المدون على النموذج (مع كتابة الأحرف القبلية إن وجدت). صلاحية النموذج 14 يوم.',
+                    'روشتة خارجية مع إدخال الملاحظات ودكتور موافقة.',
+                    'في موافقات العلاج الشهري المزمن: الانتباه لملاحظات المرفقات والأصول.',
+                    'الحمل والأسنان: إدخال Claim Type (أسنان أو حمل) والتأكد من الكارنيه.',
+                    'الادوية المزمنة والمتكررة: إدخال Claim Type (Chronic).'
+                ]
+            },
+            {
+                id: 'enaya_egypt',
+                name: 'عناية مصر',
+                type: 'insurance',
+                details: [
+                    'نموذج الشركة (صلاحيته أسبوع) مدون عليه البيانات والتاريخ وختم الجهة وإدخال رقم Claim أونلاين.',
+                    'روشتة خارجية مع الكتابة في الملاحظات.',
+                    'نقابة المهن التمثيلية تصرف بدون أونلاين بحد أقصى 250 جنيه.',
+                    'الانتباه لتغطية الحمل والأسنان والنسب المحددة للتحمل.'
+                ]
+            },
+            {
+                id: 'egycare',
+                name: 'Egycare',
+                type: 'insurance',
+                details: [
+                    'نموذج الشركة بوجود العلامة المائية (نسخة صيدلية).',
+                    'روشتة خارجية إن وجد السماح على الكارنيه مع كتابة الملاحظات.',
+                    'نموذج الطوارئ: صلاحيته يومان، الصرف بحد أقصى أسبوع لا يتعدى علبة واحدة من العلاج.',
+                    'إدخال التشخيصات كاملة وتحديد المزمن والحمل/الأسنان حسب التغطية.'
+                ]
+            },
+            {
+                id: 'unicare',
+                name: 'Uni Care',
+                type: 'insurance',
+                details: [
+                    'نموذج الشركة + روشتة خارجية مختومين بختم الجهة الطبية وتاريخ الكشف والادخال على أونلاين يداوي.',
+                    'لا يتم الصرف نهائياً على نموذج الشركة فقط.',
+                    'في حالة عدم تحديد مدة أو كمية: بحد أقصى 10 أيام.',
+                    'عند اللزوم: يُصرف شريط واحد. الحقن: 3 حقن مسكن كحد أقصى.'
+                ]
+            },
+            {
+                id: 'al_mashreq',
+                name: 'المشرق',
+                type: 'insurance',
+                details: [
+                    'نموذج أصفر (صلاحية 3 أيام) أو نموذج أبيض (صلاحية 7 أيام) وإدخال رقم Claim.',
+                    'روشتة خارجية: أخذ رقم Claim قبل الإدخال يسبقه حرف (P).',
+                    'مستوفى البيانات وختم الجهة الطبية والتشخيص.'
+                ]
+            },
+            {
+                id: 'care_plus',
+                name: 'Care Plus',
+                type: 'insurance',
+                details: [
+                    'نموذج أبيض مدون عليه البيانات، التشخيص، ختم الجهة والشركة، ويدخل أونلاين.',
+                    'الجهة الطبية على الأونلاين مطابقة للنموذج.',
+                    'في حالة الموافقات سحب الموافقة من يداوي ومراعاة الحد الأقصى والتحمل.'
+                ]
+            },
+            {
+                id: 'smart',
+                name: 'Smart',
+                type: 'insurance',
+                details: [
+                    'نموذج أصفر مختوم بختم الجهة الطبية أو روشتة خارجية مع ذكرها بالملاحظات.',
+                    'في حالة الموافقات: مراعاة الحدود القصوى ونسبة التحمل وتاريخ الموافقة.',
+                    'العلاج الشهري يتم سحبه من الأونلاين.'
+                ]
+            },
+            {
+                id: 'dms',
+                name: 'D.M.S',
+                type: 'insurance',
+                details: [
+                    'نموذج أصفر كامل البيانات مختوم بختم الجهة والتشخيص، أو روشتة خارجية (الضغط على Has Approval).',
+                    'صلاحية النموذج أو الروشتة: أسبوع.',
+                    'أقل من شهر (أسبوعين): إدخال النوع Daily / علاج شهر: إدخال Monthly.',
+                    'إرفاق البطاقة والكارنيه والتوقيع أونلاين أساسي وضروري.'
+                ]
+            }
+        ];
+
+        let currentCategory = 'all';
+
+        // Render Companies Cards
+        function renderCompanies(data) {
+            const container = document.getElementById('companiesContainer');
+            const noResults = document.getElementById('noResults');
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                noResults.classList.remove('hidden');
+                return;
+            } else {
+                noResults.classList.add('hidden');
+            }
+
+            data.forEach(company => {
+                const isPetroleum = company.type === 'petroleum';
+                const badgeColor = isPetroleum 
+                    ? 'bg-amber-100 text-amber-800 border-amber-200' 
+                    : 'bg-blue-100 text-blue-800 border-blue-200';
+                const badgeIcon = isPetroleum ? 'fa-oil-well' : 'fa-shield-halved';
+                const badgeText = isPetroleum ? 'بترول (Offline)' : 'تأمين (Online)';
+
+                const cardHtml = `
+                    <div class="bg-white rounded-2xl border border-slate-200 p-5 card-shadow flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-start justify-between gap-2 mb-3">
+                                <h2 class="text-base font-bold text-slate-800 leading-snug">${company.name}</h2>
+                                <span class="text-xs px-2.5 py-1 rounded-full border ${badgeColor} font-semibold flex items-center gap-1 shrink-0">
+                                    <i class="fa-solid ${badgeIcon}"></i> ${badgeText}
+                                </span>
+                            </div>
+                            <div class="space-y-2 text-xs text-slate-600 border-t border-slate-100 pt-3">
+                                ${company.details.map(detail => `
+                                    <div class="flex items-start gap-2">
+                                        <i class="fa-solid fa-chevron-left text-[10px] text-emerald-500 mt-1 shrink-0"></i>
+                                        <p class="leading-relaxed">${detail}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', cardHtml);
+            });
+        }
+
+        // Update Counter Badges
+        function updateCounts() {
+            const petCount = companiesData.filter(c => c.type === 'petroleum').length;
+            const insCount = companiesData.filter(c => c.type === 'insurance').length;
+
+            document.getElementById('count-all').innerText = companiesData.length;
+            document.getElementById('count-petroleum').innerText = petCount;
+            document.getElementById('count-insurance').innerText = insCount;
+        }
+
+        // Filter Action
+        function filterCategory(category) {
+            currentCategory = category;
+            
+            // Toggle active styles on buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-emerald-600', 'text-white', 'shadow-sm');
+                btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+            });
+
+            const activeBtn = document.getElementById(`btn-${category}`);
+            activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+            activeBtn.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
+
+            applyFilterAndSearch();
+        }
+
+        // Combine Search and Category Filter
+        function applyFilterAndSearch() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+
+            const filtered = companiesData.filter(company => {
+                const matchesCategory = currentCategory === 'all' || company.type === currentCategory;
+                const matchesSearch = company.name.toLowerCase().includes(query) || 
+                                     company.details.some(d => d.toLowerCase().includes(query));
+                return matchesCategory && matchesSearch;
+            });
+
+            renderCompanies(filtered);
+        }
+
+        // Modal Toggle
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.toggle('hidden');
+        }
+
+        // Event Listeners
+        document.getElementById('searchInput').addEventListener('input', applyFilterAndSearch);
+
+        // Initial Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            updateCounts();
+            renderCompanies(companiesData);
+        });
+    </script>
+</body>
+</html>
