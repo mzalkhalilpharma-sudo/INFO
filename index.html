@@ -23,7 +23,7 @@
             --badi-border: #10b981;
             --badi-text: #065f46;
             
-            --nami-bg: #fffbebf;
+            --nami-bg: #fffbeb;
             --nami-border: #f59e0b;
             --nami-text: #92400e;
             
@@ -74,7 +74,7 @@
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             padding-bottom: 15px;
             border-bottom: 2px solid var(--border);
             gap: 15px;
@@ -116,6 +116,32 @@
         .btn:hover {
             border-color: var(--primary);
             color: var(--primary);
+        }
+
+        /* Stats Badge Bar */
+        .stats-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .stat-card span {
+            color: var(--primary);
+            font-size: 1.1rem;
         }
 
         .search-filter-bar {
@@ -263,7 +289,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             font-size: 0.85rem;
         }
 
@@ -283,6 +309,33 @@
             background: var(--nahi-bg);
             border-color: var(--nahi-border);
             color: var(--nahi-text);
+        }
+
+        /* Bullet Points Styling */
+        .bullet-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .bullet-list li {
+            position: relative;
+            padding-right: 16px;
+            margin-bottom: 4px;
+            line-height: 1.5;
+        }
+
+        .bullet-list li::before {
+            content: "•";
+            position: absolute;
+            right: 0;
+            top: 0;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .bullet-list li:last-child {
+            margin-bottom: 0;
         }
 
         /* Stamps & Forms */
@@ -315,254 +368,3 @@
             border-radius: 6px;
             cursor: pointer;
         }
-
-        .stamp-desc {
-            font-size: 0.85rem;
-        }
-
-        footer {
-            margin-top: 40px;
-            text-align: center;
-            padding: 20px;
-            border-top: 1px solid var(--border);
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
-
-        footer strong {
-            color: var(--primary);
-        }
-
-        /* Image Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal img {
-            max-width: 90%;
-            max-height: 90%;
-            border-radius: 10px;
-        }
-
-        @media (max-width: 600px) {
-            header { flex-direction: column; align-items: flex-start; }
-            .controls { width: 100%; justify-content: space-between; }
-        }
-    </style>
-</head>
-<body>
-
-    <header>
-        <div class="title-area">
-            <h1><i class="fa-solid fa-notes-medical"></i> دليل صرف أدوية الشركات</h1>
-            <p>صيدليات خليل - تحديث مباشر عبر Google Sheets</p>
-        </div>
-        <div class="controls">
-            <button class="btn" onclick="fetchData()"><i class="fa-solid fa-sync"></i> تحديث البيانات</button>
-            <button class="btn" onclick="toggleTheme()"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
-        </div>
-    </header>
-
-    <div class="search-filter-bar">
-        <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="searchInput" placeholder="ابحث باسم الشركة أو التعليمات..." oninput="filterCompanies()">
-        </div>
-        <div class="filter-tabs">
-            <button class="tab-btn active" onclick="setFilter('all', this)">الكل</button>
-            <button class="tab-btn" onclick="setFilter('Online', this)">Online</button>
-            <button class="tab-btn" onclick="setFilter('Offline', this)">Offline</button>
-        </div>
-    </div>
-
-    <div id="loading" class="loading">
-        <i class="fa-solid fa-circle-notch fa-spin"></i> جاري تحميل البيانات من الشيت...
-    </div>
-
-    <div class="companies-grid" id="companiesGrid"></div>
-
-    <footer>
-        <p>Developed by Mena Nazih 🐊</p>
-    </footer>
-
-    <!-- Image Modal -->
-    <div class="modal" id="imageModal" onclick="this.style.display='none'">
-        <img id="modalImg" src="" alt="Stamp/Form Full">
-    </div>
-
-    <script>
-        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQlFnh3AdmQdcktUQ4C08TofKS_eov2_5Der_GXZ1bvMb5EudSilHsBrYyLpvDRKSBizcnyADBOSj9v/pub?output=csv';
-        
-        let allCompanies = [];
-        let currentFilter = 'all';
-
-        async function fetchData() {
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('companiesGrid').innerHTML = '';
-            
-            try {
-                const response = await fetch(CSV_URL + '&t=' + new Date().getTime());
-                const data = await response.text();
-                allCompanies = parseCSV(data);
-                renderCompanies();
-            } catch (error) {
-                document.getElementById('loading').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> حدث خطأ أثناء تحميل البيانات!';
-            }
-        }
-
-        function parseCSV(text) {
-            const lines = text.split('\n');
-            const result = [];
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
-                
-                // Simple CSV parsing handling quotes
-                const row = [];
-                let insideQuote = false;
-                let entry = '';
-                
-                for (let char of lines[i]) {
-                    if (char === '"') {
-                        insideQuote = !insideQuote;
-                    } else if (char === ',' && !insideQuote) {
-                        row.push(entry.trim().replace(/^"|"$/g, ''));
-                        entry = '';
-                    } else {
-                        entry += char;
-                    }
-                }
-                row.push(entry.trim().replace(/^"|"$/g, ''));
-
-                if (row[0]) {
-                    result.push({
-                        name: row[0] || '',
-                        type: row[1] || 'Offline',
-                        logo: row[2] || '',
-                        badi: row[3] || '',
-                        nami: row[4] || '',
-                        nahi: row[5] || '',
-                        stamps: row[6] || ''
-                    });
-                }
-            }
-            return result;
-        }
-
-        function renderCompanies() {
-            const grid = document.getElementById('companiesGrid');
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            document.getElementById('loading').style.display = 'none';
-
-            grid.innerHTML = '';
-
-            const filtered = allCompanies.filter(c => {
-                const matchesFilter = currentFilter === 'all' || c.type.toLowerCase() === currentFilter.toLowerCase();
-                const matchesSearch = c.name.toLowerCase().includes(search) ||
-                                      c.badi.toLowerCase().includes(search) ||
-                                      c.nami.toLowerCase().includes(search) ||
-                                      c.nahi.toLowerCase().includes(search);
-                return matchesFilter && matchesSearch;
-            });
-
-            if (filtered.length === 0) {
-                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">لا توجد نتائج متطابقة.</div>';
-                return;
-            }
-
-            filtered.forEach(c => {
-                const card = document.createElement('div');
-                card.className = 'company-card';
-
-                const logoSrc = c.logo ? c.logo : 'https://via.placeholder.com/45?text=' + encodeURIComponent(c.name.charAt(0));
-
-                let stampsHTML = '';
-                if (c.stamps && c.stamps.includes('|')) {
-                    const parts = c.stamps.split('|');
-                    const imgUrl = parts[0].trim();
-                    const desc = parts[1].trim();
-                    stampsHTML = `
-                        <div class="stamps-section">
-                            <div class="stamps-title"><i class="fa-solid fa-stamp"></i> النماذج والأختام</div>
-                            <div class="stamp-item">
-                                <img src="${imgUrl}" class="stamp-img" onclick="openModal('${imgUrl}')" alt="ختم/نموذج">
-                                <div class="stamp-desc">${desc}</div>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                card.innerHTML = `
-                    <div class="card-header">
-                        <div class="company-title">
-                            <img src="${logoSrc}" class="company-logo" onerror="this.src='https://via.placeholder.com/45?text=Co'" alt="Logo">
-                            <div class="company-name">${c.name}</div>
-                        </div>
-                        <span class="type-badge ${c.type.toLowerCase() === 'online' ? 'badge-online' : 'badge-offline'}">${c.type}</span>
-                    </div>
-
-                    ${c.badi ? `
-                        <div class="level-box level-badi">
-                            <div class="level-title"><i class="fa-solid fa-seedling"></i> مستوى بادي (الأساسيات)</div>
-                            <div>${c.badi}</div>
-                        </div>
-                    ` : ''}
-
-                    ${c.nami ? `
-                        <div class="level-box level-nami">
-                            <div class="level-title"><i class="fa-solid fa-chart-line"></i> مستوى نامي (الاستثناءات والتكرار)</div>
-                            <div>${c.nami}</div>
-                        </div>
-                    ` : ''}
-
-                    ${c.nahi ? `
-                        <div class="level-box level-nahi">
-                            <div class="level-title"><i class="fa-solid fa-ban"></i> مستوى ناهي (الموانع والرفض)</div>
-                            <div>${c.nahi}</div>
-                        </div>
-                    ` : ''}
-
-                    ${stampsHTML}
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        function setFilter(filter, btn) {
-            currentFilter = filter;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            renderCompanies();
-        }
-
-        function filterCompanies() {
-            renderCompanies();
-        }
-
-        function toggleTheme() {
-            const body = document.body;
-            const icon = document.getElementById('theme-icon');
-            if (body.getAttribute('data-theme') === 'dark') {
-                body.removeAttribute('data-theme');
-                icon.className = 'fa-solid fa-moon';
-            } else {
-                body.setAttribute('data-theme', 'dark');
-                icon.className = 'fa-solid fa-sun';
-            }
-        }
-
-        function openModal(src) {
-            document.getElementById('modalImg').src = src;
-            document.getElementById('imageModal').style.display = 'flex';
-        }
-
-        // Initial Load
-        fetchData();
-    </script>
-</body>
-</html>
