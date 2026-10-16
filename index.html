@@ -456,7 +456,6 @@
                 <input type="text" id="searchInput" placeholder="ابحث باسم الشركة أو التعليمات..." oninput="renderCompanies()">
             </div>
             
-            <!-- Type Filter Tabs (Online/Offline/All) -->
             <div class="filter-group">
                 <span class="filter-label"><i class="fa-solid fa-filter"></i> النوع:</span>
                 <button class="tab-btn active" onclick="setTypeFilter('all', this)">الكل</button>
@@ -465,7 +464,6 @@
             </div>
         </div>
 
-        <!-- Level Filter Tabs (Badi / Nami / Nahi) -->
         <div class="search-filter-row">
             <div class="filter-group" style="width: 100%; justify-content: flex-start;">
                 <span class="filter-label"><i class="fa-solid fa-layer-group"></i> مستويات التعليمات:</span>
@@ -496,7 +494,7 @@
         
         let allCompanies = [];
         let currentTypeFilter = 'all';
-        let currentLevelFilter = 'badi'; // Default level
+        let currentLevelFilter = 'badi';
 
         async function fetchData() {
             document.getElementById('loading').style.display = 'block';
@@ -516,13 +514,14 @@
             const lines = text.split('\n');
             const result = [];
             for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
+                const line = lines[i].trim();
+                if (!line) continue;
                 
                 const row = [];
                 let insideQuote = false;
                 let entry = '';
                 
-                for (let char of lines[i]) {
+                for (let char of line) {
                     if (char === '"') {
                         insideQuote = !insideQuote;
                     } else if (char === ',' && !insideQuote) {
@@ -534,9 +533,16 @@
                 }
                 row.push(entry.trim().replace(/^"|"$/g, ''));
 
-                if (row[0]) {
+                const companyName = row[0] ? row[0].trim() : '';
+
+                // Ignore header instructions, notes, or rows starting with *
+                if (companyName && 
+                    !companyName.startsWith('*') && 
+                    !companyName.includes('اسم الشركة') && 
+                    !companyName.includes('موانع (توضع كمرجع)')) {
+                    
                     result.push({
-                        name: row[0] || '',
+                        name: companyName,
                         type: row[1] || 'Offline',
                         logo: row[2] || '',
                         badi: row[3] || '',
@@ -573,7 +579,6 @@
                 return matchesType && matchesSearch;
             });
 
-            // Update Counts
             const onlineCount = filtered.filter(c => c.type.toLowerCase() === 'online').length;
             const offlineCount = filtered.filter(c => c.type.toLowerCase() === 'offline').length;
             
@@ -608,10 +613,8 @@
                     `;
                 }
 
-                // Building levels progressively based on filter
                 let levelsHTML = '';
 
-                // Badi Level (Always shown if level >= badi)
                 if (c.badi) {
                     levelsHTML += `
                         <div class="level-box level-badi">
@@ -621,7 +624,6 @@
                     `;
                 }
 
-                // Nami Level (Shown if level is nami or nahi)
                 if ((currentLevelFilter === 'nami' || currentLevelFilter === 'nahi') && c.nami) {
                     levelsHTML += `
                         <div class="level-box level-nami">
@@ -631,7 +633,6 @@
                     `;
                 }
 
-                // Nahi Level (Shown only if level is nahi)
                 if (currentLevelFilter === 'nahi' && c.nahi) {
                     levelsHTML += `
                         <div class="level-box level-nahi">
@@ -659,7 +660,6 @@
 
         function setTypeFilter(filter, btn) {
             currentTypeFilter = filter;
-            // Remove active from type buttons only
             const parent = btn.parentElement;
             parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -668,7 +668,6 @@
 
         function setLevelFilter(level, btn) {
             currentLevelFilter = level;
-            // Remove active from level buttons only
             const parent = btn.parentElement;
             parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -692,7 +691,6 @@
             document.getElementById('imageModal').style.display = 'flex';
         }
 
-        // Initial Load
         fetchData();
     </script>
 </body>
