@@ -27,9 +27,9 @@
             --nami-border: #f59e0b;
             --nami-text: #92400e;
             
-            --nahi-bg: #fef2f2;
-            --nahi-border: #ef4444;
-            --nahi-text: #991b1b;
+            --nahi-bg: #eff6ff;
+            --nahi-border: #3b82f6;
+            --nahi-text: #1e40af;
         }
 
         [data-theme="dark"] {
@@ -47,9 +47,9 @@
             --nami-border: #f59e0b;
             --nami-text: #fbbf24;
             
-            --nahi-bg: #7f1d1d22;
-            --nahi-border: #ef4444;
-            --nahi-text: #f87171;
+            --nahi-bg: #1e3a8a22;
+            --nahi-border: #3b82f6;
+            --nahi-text: #60a5fa;
         }
 
         * {
@@ -118,12 +118,12 @@
             color: var(--primary);
         }
 
-        /* Stats Badge Bar */
+        /* Stats Bar */
         .stats-bar {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .stat-card {
@@ -144,11 +144,18 @@
             font-size: 1.1rem;
         }
 
-        .search-filter-bar {
+        /* Filters Bar */
+        .filters-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .search-filter-row {
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
-            margin-bottom: 25px;
         }
 
         .search-box {
@@ -180,23 +187,34 @@
             color: var(--text-muted);
         }
 
-        .filter-tabs {
+        .filter-group {
             display: flex;
             gap: 8px;
             background: var(--card-bg);
             padding: 4px;
             border-radius: 10px;
             border: 1px solid var(--border);
+            align-items: center;
+            overflow-x: auto;
+        }
+
+        .filter-label {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            padding: 0 8px;
         }
 
         .tab-btn {
-            padding: 8px 16px;
+            padding: 8px 14px;
             border: none;
             background: none;
             color: var(--text-muted);
             border-radius: 7px;
             cursor: pointer;
             font-weight: bold;
+            white-space: nowrap;
+            font-size: 0.9rem;
         }
 
         .tab-btn.active {
@@ -368,3 +386,314 @@
             border-radius: 6px;
             cursor: pointer;
         }
+
+        .stamp-desc {
+            font-size: 0.85rem;
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        footer strong {
+            color: var(--primary);
+        }
+
+        /* Image Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 600px) {
+            header { flex-direction: column; align-items: flex-start; }
+            .controls { width: 100%; justify-content: space-between; }
+            .filter-group { width: 100%; overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="title-area">
+            <h1><i class="fa-solid fa-notes-medical"></i> دليل صرف أدوية الشركات</h1>
+            <p>صيدليات خليل - تحديث مباشر عبر Google Sheets</p>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="fetchData()"><i class="fa-solid fa-sync"></i> تحديث البيانات</button>
+            <button class="btn" onclick="toggleTheme()"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
+        </div>
+    </header>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar" id="statsBar">
+        <div class="stat-card"><i class="fa-solid fa-building"></i> إجمالي الشركات: <span id="countTotal">0</span></div>
+        <div class="stat-card"><i class="fa-solid fa-globe"></i> أونلاين (تأمين): <span id="countOnline">0</span></div>
+        <div class="stat-card"><i class="fa-solid fa-oil-well"></i> أوفلاين (بترول): <span id="countOffline">0</span></div>
+    </div>
+
+    <!-- Search & Filters Container -->
+    <div class="filters-container">
+        <div class="search-filter-row">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" placeholder="ابحث باسم الشركة أو التعليمات..." oninput="renderCompanies()">
+            </div>
+            
+            <!-- Type Filter Tabs (Online/Offline/All) -->
+            <div class="filter-group">
+                <span class="filter-label"><i class="fa-solid fa-filter"></i> النوع:</span>
+                <button class="tab-btn active" onclick="setTypeFilter('all', this)">الكل</button>
+                <button class="tab-btn" onclick="setTypeFilter('Online', this)">Online</button>
+                <button class="tab-btn" onclick="setTypeFilter('Offline', this)">Offline</button>
+            </div>
+        </div>
+
+        <!-- Level Filter Tabs (Badi / Nami / Nahi) -->
+        <div class="search-filter-row">
+            <div class="filter-group" style="width: 100%; justify-content: flex-start;">
+                <span class="filter-label"><i class="fa-solid fa-layer-group"></i> مستويات التعليمات:</span>
+                <button class="tab-btn active" onclick="setLevelFilter('badi', this)"><i class="fa-solid fa-seedling"></i> بادي (الأساسية)</button>
+                <button class="tab-btn" onclick="setLevelFilter('nami', this)"><i class="fa-solid fa-chart-line"></i> نامي (الأساسية + الإضافية)</button>
+                <button class="tab-btn" onclick="setLevelFilter('nahi', this)"><i class="fa-solid fa-circle-plus"></i> ناهي (الأساسية + الإضافية + الأكثر)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading" class="loading">
+        <i class="fa-solid fa-circle-notch fa-spin"></i> جاري تحميل البيانات من الشيت...
+    </div>
+
+    <div class="companies-grid" id="companiesGrid"></div>
+
+    <footer>
+        <p>Developed by Mena Nazih 🐊</p>
+    </footer>
+
+    <!-- Image Modal -->
+    <div class="modal" id="imageModal" onclick="this.style.display='none'">
+        <img id="modalImg" src="" alt="Stamp/Form Full">
+    </div>
+
+    <script>
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQlFnh3AdmQdcktUQ4C08TofKS_eov2_5Der_GXZ1bvMb5EudSilHsBrYyLpvDRKSBizcnyADBOSj9v/pub?output=csv';
+        
+        let allCompanies = [];
+        let currentTypeFilter = 'all';
+        let currentLevelFilter = 'badi'; // Default level
+
+        async function fetchData() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('companiesGrid').innerHTML = '';
+            
+            try {
+                const response = await fetch(CSV_URL + '&t=' + new Date().getTime());
+                const data = await response.text();
+                allCompanies = parseCSV(data);
+                renderCompanies();
+            } catch (error) {
+                document.getElementById('loading').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> حدث خطأ أثناء تحميل البيانات!';
+            }
+        }
+
+        function parseCSV(text) {
+            const lines = text.split('\n');
+            const result = [];
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                
+                const row = [];
+                let insideQuote = false;
+                let entry = '';
+                
+                for (let char of lines[i]) {
+                    if (char === '"') {
+                        insideQuote = !insideQuote;
+                    } else if (char === ',' && !insideQuote) {
+                        row.push(entry.trim().replace(/^"|"$/g, ''));
+                        entry = '';
+                    } else {
+                        entry += char;
+                    }
+                }
+                row.push(entry.trim().replace(/^"|"$/g, ''));
+
+                if (row[0]) {
+                    result.push({
+                        name: row[0] || '',
+                        type: row[1] || 'Offline',
+                        logo: row[2] || '',
+                        badi: row[3] || '',
+                        nami: row[4] || '',
+                        nahi: row[5] || '',
+                        stamps: row[6] || ''
+                    });
+                }
+            }
+            return result;
+        }
+
+        function formatAsBullets(text) {
+            if (!text) return '';
+            const parts = text.split(/\n|(?<=\D)\.\s+|(?<=\d)\.\s+/).map(p => p.trim()).filter(p => p.length > 0);
+            if (parts.length === 0) return '';
+            
+            return '<ul class="bullet-list">' + parts.map(p => `<li>${p}</li>`).join('') + '</ul>';
+        }
+
+        function renderCompanies() {
+            const grid = document.getElementById('companiesGrid');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            document.getElementById('loading').style.display = 'none';
+
+            grid.innerHTML = '';
+
+            const filtered = allCompanies.filter(c => {
+                const matchesType = currentTypeFilter === 'all' || c.type.toLowerCase() === currentTypeFilter.toLowerCase();
+                const matchesSearch = c.name.toLowerCase().includes(search) ||
+                                      c.badi.toLowerCase().includes(search) ||
+                                      c.nami.toLowerCase().includes(search) ||
+                                      c.nahi.toLowerCase().includes(search);
+                return matchesType && matchesSearch;
+            });
+
+            // Update Counts
+            const onlineCount = filtered.filter(c => c.type.toLowerCase() === 'online').length;
+            const offlineCount = filtered.filter(c => c.type.toLowerCase() === 'offline').length;
+            
+            document.getElementById('countTotal').innerText = filtered.length;
+            document.getElementById('countOnline').innerText = onlineCount;
+            document.getElementById('countOffline').innerText = offlineCount;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 30px;">لا توجد نتائج متطابقة مع البحث.</div>';
+                return;
+            }
+
+            filtered.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'company-card';
+
+                const logoSrc = c.logo ? c.logo : 'https://via.placeholder.com/45?text=' + encodeURIComponent(c.name.charAt(0));
+
+                let stampsHTML = '';
+                if (c.stamps && c.stamps.includes('|')) {
+                    const parts = c.stamps.split('|');
+                    const imgUrl = parts[0].trim();
+                    const desc = parts[1].trim();
+                    stampsHTML = `
+                        <div class="stamps-section">
+                            <div class="stamps-title"><i class="fa-solid fa-stamp"></i> النماذج والأختام</div>
+                            <div class="stamp-item">
+                                <img src="${imgUrl}" class="stamp-img" onclick="openModal('${imgUrl}')" alt="ختم/نموذج">
+                                <div class="stamp-desc">${desc}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Building levels progressively based on filter
+                let levelsHTML = '';
+
+                // Badi Level (Always shown if level >= badi)
+                if (c.badi) {
+                    levelsHTML += `
+                        <div class="level-box level-badi">
+                            <div class="level-title"><i class="fa-solid fa-seedling"></i> المعلومات الأساسية (بادي)</div>
+                            <div>${formatAsBullets(c.badi)}</div>
+                        </div>
+                    `;
+                }
+
+                // Nami Level (Shown if level is nami or nahi)
+                if ((currentLevelFilter === 'nami' || currentLevelFilter === 'nahi') && c.nami) {
+                    levelsHTML += `
+                        <div class="level-box level-nami">
+                            <div class="level-title"><i class="fa-solid fa-chart-line"></i> المعلومات الإضافية (نامي)</div>
+                            <div>${formatAsBullets(c.nami)}</div>
+                        </div>
+                    `;
+                }
+
+                // Nahi Level (Shown only if level is nahi)
+                if (currentLevelFilter === 'nahi' && c.nahi) {
+                    levelsHTML += `
+                        <div class="level-box level-nahi">
+                            <div class="level-title"><i class="fa-solid fa-circle-plus"></i> معلومات إضافية متقدمة (ناهي)</div>
+                            <div>${formatAsBullets(c.nahi)}</div>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="company-title">
+                            <img src="${logoSrc}" class="company-logo" onerror="this.src='https://via.placeholder.com/45?text=Co'" alt="Logo">
+                            <div class="company-name">${c.name}</div>
+                        </div>
+                        <span class="type-badge ${c.type.toLowerCase() === 'online' ? 'badge-online' : 'badge-offline'}">${c.type}</span>
+                    </div>
+
+                    ${levelsHTML}
+                    ${stampsHTML}
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function setTypeFilter(filter, btn) {
+            currentTypeFilter = filter;
+            // Remove active from type buttons only
+            const parent = btn.parentElement;
+            parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderCompanies();
+        }
+
+        function setLevelFilter(level, btn) {
+            currentLevelFilter = level;
+            // Remove active from level buttons only
+            const parent = btn.parentElement;
+            parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderCompanies();
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                icon.className = 'fa-solid fa-moon';
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                icon.className = 'fa-solid fa-sun';
+            }
+        }
+
+        function openModal(src) {
+            document.getElementById('modalImg').src = src;
+            document.getElementById('imageModal').style.display = 'flex';
+        }
+
+        // Initial Load
+        fetchData();
+    </script>
+</body>
+</html>
