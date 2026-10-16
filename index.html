@@ -385,6 +385,7 @@
             object-fit: cover;
             border-radius: 6px;
             cursor: pointer;
+            border: 1px solid var(--border);
         }
 
         .stamp-desc {
@@ -535,7 +536,6 @@
 
                 const companyName = row[0] ? row[0].trim() : '';
 
-                // Ignore header instructions, notes, or rows starting with *
                 if (companyName && 
                     !companyName.startsWith('*') && 
                     !companyName.includes('اسم الشركة') && 
@@ -543,12 +543,12 @@
                     
                     result.push({
                         name: companyName,
-                        type: row[1] || 'Offline',
-                        logo: row[2] || '',
-                        badi: row[3] || '',
-                        nami: row[4] || '',
-                        nahi: row[5] || '',
-                        stamps: row[6] || ''
+                        type: row[1] ? row[1].trim() : 'Offline',
+                        logo: row[2] ? row[2].trim() : '',
+                        badi: row[3] ? row[3].trim() : '',
+                        nami: row[4] ? row[4].trim() : '',
+                        nahi: row[5] ? row[5].trim() : '',
+                        stamps: row[6] ? row[6].trim() : ''
                     });
                 }
             }
@@ -602,15 +602,17 @@
                     const parts = c.stamps.split('|');
                     const imgUrl = parts[0].trim();
                     const desc = parts[1].trim();
-                    stampsHTML = `
-                        <div class="stamps-section">
-                            <div class="stamps-title"><i class="fa-solid fa-stamp"></i> النماذج والأختام</div>
-                            <div class="stamp-item">
-                                <img src="${imgUrl}" class="stamp-img" onclick="openModal('${imgUrl}')" alt="ختم/نموذج">
-                                <div class="stamp-desc">${desc}</div>
+                    if (imgUrl) {
+                        stampsHTML = `
+                            <div class="stamps-section">
+                                <div class="stamps-title"><i class="fa-solid fa-stamp"></i> النماذج والأختام</div>
+                                <div class="stamp-item">
+                                    <img src="${imgUrl}" class="stamp-img" onerror="this.src='https://via.placeholder.com/50?text=Error'" onclick="openModal('${imgUrl}')" alt="ختم/نموذج">
+                                    <div class="stamp-desc">${desc}</div>
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    }
                 }
 
                 let levelsHTML = '';
