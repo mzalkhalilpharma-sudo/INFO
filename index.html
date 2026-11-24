@@ -203,6 +203,7 @@
             font-weight: bold;
             color: var(--text-muted);
             padding: 0 8px;
+            white-space: nowrap;
         }
 
         .tab-btn {
@@ -215,10 +216,18 @@
             font-weight: bold;
             white-space: nowrap;
             font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .tab-btn.active {
             background: var(--primary);
+            color: white;
+        }
+
+        .tab-btn.general-btn.active {
+            background: #0284c7;
             color: white;
         }
 
@@ -246,6 +255,11 @@
             gap: 15px;
             position: relative;
             overflow: hidden;
+        }
+
+        .company-card.general-card {
+            grid-column: 1 / -1;
+            border: 2px solid #0284c7;
         }
 
         .card-header {
@@ -294,6 +308,11 @@
             color: #b45309;
         }
 
+        .badge-general {
+            background: #e0f2fe;
+            color: #0284c7;
+        }
+
         /* Level Boxes */
         .level-box {
             border-radius: 8px;
@@ -339,8 +358,9 @@
         .bullet-list li {
             position: relative;
             padding-right: 16px;
-            margin-bottom: 4px;
-            line-height: 1.5;
+            margin-bottom: 5px;
+            line-height: 1.55;
+            white-space: pre-line;
         }
 
         .bullet-list li::before {
@@ -461,8 +481,9 @@
             </div>
             
             <div class="filter-group">
-                <span class="filter-label"><i class="fa-solid fa-filter"></i> النوع:</span>
+                <span class="filter-label"><i class="fa-solid fa-filter"></i> القسم:</span>
                 <button class="tab-btn active" onclick="setTypeFilter('all', this)">الكل</button>
+                <button class="tab-btn general-btn" onclick="setTypeFilter('General', this)"><i class="fa-solid fa-thumbtack"></i> تعليمات عامة</button>
                 <button class="tab-btn" onclick="setTypeFilter('Online', this)">Online</button>
                 <button class="tab-btn" onclick="setTypeFilter('Offline', this)">Offline</button>
             </div>
@@ -500,7 +521,6 @@
         let currentTypeFilter = 'all';
         let currentLevelFilter = 'badi';
 
-        // Auto convert Google Drive links to direct viewable image URLs
         function convertImageURL(url) {
             if (!url) return '';
             url = url.trim();
@@ -528,43 +548,63 @@
         }
 
         function parseCSV(text) {
-            const lines = text.split('\n');
-            const result = [];
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
-                
-                const row = [];
-                let insideQuote = false;
-                let entry = '';
-                
-                for (let char of line) {
-                    if (char === '"') {
-                        insideQuote = !insideQuote;
-                    } else if (char === ',' && !insideQuote) {
-                        row.push(entry.trim().replace(/^"|"$/g, ''));
-                        entry = '';
-                    } else {
-                        entry += char;
-                    }
-                }
-                row.push(entry.trim().replace(/^"|"$/g, ''));
+            const rows = [];
+            let row = [];
+            let entry = '';
+            let insideQuote = false;
 
-                const companyName = row[0] ? row[0].trim() : '';
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const nextChar = text[i + 1];
+
+                if (char === '"') {
+                    if (insideQuote && nextChar === '"') {
+                        entry += '"';
+                        i++;
+                    } else {
+                        insideQuote = !insideQuote;
+                    }
+                } else if (char === ',' && !insideQuote) {
+                    row.push(entry.trim());
+                    entry = '';
+                } else if ((char === '\n' || (char === '\r' && nextChar === '\n')) && !insideQuote) {
+                    if (char === '\r') i++;
+                    row.push(entry.trim());
+                    rows.push(row);
+                    row = [];
+                    entry = '';
+                } else if (char !== '\r') {
+                    entry += char;
+                }
+            }
+            if (entry.length > 0 || row.length > 0) {
+                row.push(entry.trim());
+                rows.push(row);
+            }
+
+            const result = [];
+            for (let i = 1; i < rows.length; i++) {
+                const r = rows[i];
+                const companyName = r[0] ? r[0].trim() : '';
 
                 if (companyName && 
                     !companyName.startsWith('*') && 
                     !companyName.includes('اسم الشركة') && 
                     !companyName.includes('موانع (توضع كمرجع)')) {
-                    
+
+                    let rawType = r[1] ? r[1].trim() : 'Offline';
+                    if (rawType.includes('عام') || companyName.includes('تعليمات عامة')) {
+                        rawType = 'General';
+                    }
+
                     result.push({
                         name: companyName,
-                        type: row[1] ? row[1].trim() : 'Offline',
-                        logo: convertImageURL(row[2]),
-                        badi: row[3] ? row[3].trim() : '',
-                        nami: row[4] ? row[4].trim() : '',
-                        nahi: row[5] ? row[5].trim() : '',
-                        stamps: row[6] ? row[6].trim() : ''
+                        type: rawType,
+                        logo: convertImageURL(r[2]),
+                        badi: r[3] ? r[3].trim() : '',
+                        nami: r[4] ? r[4].trim() : '',
+                        nahi: r[5] ? r[5].trim() : '',
+                        stamps: r[6] ? r[6].trim() : ''
                     });
                 }
             }
@@ -573,7 +613,7 @@
 
         function formatAsBullets(text) {
             if (!text) return '';
-            const parts = text.split(/\n|(?<=\D)\.\s+|(?<=\d)\.\s+/).map(p => p.trim()).filter(p => p.length > 0);
+            const parts = text.split(/\n/).map(p => p.trim()).filter(p => p.length > 0);
             if (parts.length === 0) return '';
             
             return '<ul class="bullet-list">' + parts.map(p => `<li>${p}</li>`).join('') + '</ul>';
@@ -586,8 +626,26 @@
 
             grid.innerHTML = '';
 
+            const actualCompanies = allCompanies.filter(c => c.type.toLowerCase() !== 'general');
+            const totalOnline = actualCompanies.filter(c => c.type.toLowerCase() === 'online').length;
+            const totalOffline = actualCompanies.filter(c => c.type.toLowerCase() === 'offline').length;
+
+            document.getElementById('countTotal').innerText = actualCompanies.length;
+            document.getElementById('countOnline').innerText = totalOnline;
+            document.getElementById('countOffline').innerText = totalOffline;
+
             const filtered = allCompanies.filter(c => {
-                const matchesType = currentTypeFilter === 'all' || c.type.toLowerCase() === currentTypeFilter.toLowerCase();
+                const isGeneral = c.type.toLowerCase() === 'general';
+                let matchesType = false;
+
+                if (currentTypeFilter === 'all') {
+                    matchesType = true;
+                } else if (currentTypeFilter === 'General') {
+                    matchesType = isGeneral;
+                } else {
+                    matchesType = c.type.toLowerCase() === currentTypeFilter.toLowerCase();
+                }
+
                 const matchesSearch = c.name.toLowerCase().includes(search) ||
                                       c.badi.toLowerCase().includes(search) ||
                                       c.nami.toLowerCase().includes(search) ||
@@ -595,21 +653,15 @@
                 return matchesType && matchesSearch;
             });
 
-            const onlineCount = filtered.filter(c => c.type.toLowerCase() === 'online').length;
-            const offlineCount = filtered.filter(c => c.type.toLowerCase() === 'offline').length;
-            
-            document.getElementById('countTotal').innerText = filtered.length;
-            document.getElementById('countOnline').innerText = onlineCount;
-            document.getElementById('countOffline').innerText = offlineCount;
-
             if (filtered.length === 0) {
                 grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 30px;">لا توجد نتائج متطابقة مع البحث.</div>';
                 return;
             }
 
             filtered.forEach(c => {
+                const isGeneral = c.type.toLowerCase() === 'general';
                 const card = document.createElement('div');
-                card.className = 'company-card';
+                card.className = `company-card ${isGeneral ? 'general-card' : ''}`;
 
                 const logoSrc = c.logo ? c.logo : 'https://via.placeholder.com/45?text=' + encodeURIComponent(c.name.charAt(0));
 
@@ -638,7 +690,7 @@
                 if (c.badi) {
                     levelsHTML += `
                         <div class="level-box level-badi">
-                            <div class="level-title"><i class="fa-solid fa-seedling"></i> المعلومات الأساسية (بادي)</div>
+                            <div class="level-title"><i class="fa-solid fa-seedling"></i> ${isGeneral ? 'التعليمات العامة' : 'المعلومات الأساسية (بادي)'}</div>
                             <div>${formatAsBullets(c.badi)}</div>
                         </div>
                     `;
@@ -662,13 +714,22 @@
                     `;
                 }
 
+                let badgeClass = 'badge-offline';
+                let badgeLabel = c.type;
+                if (c.type.toLowerCase() === 'online') {
+                    badgeClass = 'badge-online';
+                } else if (isGeneral) {
+                    badgeClass = 'badge-general';
+                    badgeLabel = 'تعليمات عامة';
+                }
+
                 card.innerHTML = `
                     <div class="card-header">
                         <div class="company-title">
-                            <img src="${logoSrc}" class="company-logo" onerror="this.src='https://via.placeholder.com/45?text=Co'" alt="Logo">
+                            ${isGeneral ? '<i class="fa-solid fa-thumbtack" style="color: #0284c7; font-size: 1.3rem;"></i>' : `<img src="${logoSrc}" class="company-logo" onerror="this.src='https://via.placeholder.com/45?text=Co'" alt="Logo">`}
                             <div class="company-name">${c.name}</div>
                         </div>
-                        <span class="type-badge ${c.type.toLowerCase() === 'online' ? 'badge-online' : 'badge-offline'}">${c.type}</span>
+                        <span class="type-badge ${badgeClass}">${badgeLabel}</span>
                     </div>
 
                     ${levelsHTML}
