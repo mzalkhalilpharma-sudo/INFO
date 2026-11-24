@@ -95,6 +95,7 @@
 
         .controls {
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
             align-items: center;
         }
@@ -111,9 +112,17 @@
             align-items: center;
             gap: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-decoration: none;
+            font-size: 0.9rem;
         }
 
         .btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-sheet {
+            background: #10b98115;
             border-color: var(--primary);
             color: var(--primary);
         }
@@ -427,15 +436,16 @@
             color: var(--primary);
         }
 
-        /* Image Modal */
+        /* Modals */
         .modal {
             display: none;
             position: fixed;
             z-index: 1000;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.75);
             justify-content: center;
             align-items: center;
+            padding: 15px;
         }
 
         .modal img {
@@ -445,9 +455,75 @@
             box-shadow: 0 5px 25px rgba(0,0,0,0.5);
         }
 
+        .sheet-modal-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            text-align: center;
+        }
+
+        .sheet-modal-box h3 {
+            margin-bottom: 8px;
+            color: var(--primary);
+            font-size: 1.25rem;
+        }
+
+        .sheet-modal-box p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        .sheet-pass-input {
+            width: 100%;
+            padding: 11px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-color);
+            color: var(--text-main);
+            font-size: 1rem;
+            margin-bottom: 12px;
+            outline: none;
+            text-align: center;
+        }
+
+        .sheet-pass-input:focus {
+            border-color: var(--primary);
+        }
+
+        .sheet-error {
+            color: #ef4444;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            min-height: 20px;
+        }
+
+        .sheet-link-box {
+            display: none;
+            background: var(--bg-color);
+            border: 1px dashed var(--primary);
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 12px;
+            word-break: break-all;
+        }
+
+        .sheet-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
         @media (max-width: 600px) {
             header { flex-direction: column; align-items: flex-start; }
-            .controls { width: 100%; justify-content: space-between; }
+            .controls { width: 100%; justify-content: flex-start; }
             .filter-group { width: 100%; overflow-x: auto; }
         }
     </style>
@@ -460,6 +536,7 @@
             <p>صيدليات خليل - تحديث مباشر عبر Google Sheets</p>
         </div>
         <div class="controls">
+            <button class="btn btn-sheet" onclick="openSheetModal()"><i class="fa-solid fa-table"></i> رابط الشيت</button>
             <button class="btn" onclick="fetchData()"><i class="fa-solid fa-sync"></i> تحديث البيانات</button>
             <button class="btn" onclick="toggleTheme()"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
         </div>
@@ -514,12 +591,70 @@
         <img id="modalImg" src="" alt="Stamp/Form Full">
     </div>
 
+    <!-- Sheet Password Modal -->
+    <div class="modal" id="sheetModal" onclick="if(event.target === this) closeSheetModal()">
+        <div class="sheet-modal-box">
+            <h3><i class="fa-solid fa-lock"></i> الوصول إلى رابط الشيت</h3>
+            <p>اكتب كلمة السر لإظهار رابط جدول البيانات</p>
+            <input type="password" id="sheetPasswordInput" class="sheet-pass-input" placeholder="أدخل كلمة السر..." onkeydown="if(event.key==='Enter') unlockSheetLink()">
+            <div class="sheet-error" id="sheetError"></div>
+
+            <div class="sheet-actions">
+                <button class="btn btn-sheet" onclick="unlockSheetLink()"><i class="fa-solid fa-key"></i> إظهار الرابط</button>
+                <button class="btn" onclick="closeSheetModal()">إغلاق</button>
+            </div>
+
+            <div class="sheet-link-box" id="sheetLinkBox">
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">رابط Google Sheet:</div>
+                <a id="sheetAnchor" href="https://docs.google.com/spreadsheets/d/1mMLPX7tfoKh2dStvEHjem0stl18ztDgR47pU6ltloT8/edit" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight: bold; font-size: 0.85rem;">
+                    https://docs.google.com/spreadsheets/d/1mMLPX7tfoKh2dStvEHjem0stl18ztDgR47pU6ltloT8/edit
+                </a>
+                <div class="sheet-actions">
+                    <a href="https://docs.google.com/spreadsheets/d/1mMLPX7tfoKh2dStvEHjem0stl18ztDgR47pU6ltloT8/edit" target="_blank" rel="noopener noreferrer" class="btn btn-sheet">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> فتح الشيت
+                    </a>
+                    <button class="btn" onclick="copySheetLink()"><i class="fa-solid fa-copy"></i> نسخ الرابط</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQlFnh3AdmQdcktUQ4C08TofKS_eov2_5Der_GXZ1bvMb5EudSilHsBrYyLpvDRKSBizcnyADBOSj9v/pub?output=csv';
+        const SHEET_EDIT_URL = 'https://docs.google.com/spreadsheets/d/1mMLPX7tfoKh2dStvEHjem0stl18ztDgR47pU6ltloT8/edit';
+        const SHEET_PASS = 'نجمة';
         
         let allCompanies = [];
         let currentTypeFilter = 'all';
         let currentLevelFilter = 'badi';
+
+        function openSheetModal() {
+            document.getElementById('sheetPasswordInput').value = '';
+            document.getElementById('sheetError').innerText = '';
+            document.getElementById('sheetLinkBox').style.display = 'none';
+            document.getElementById('sheetModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('sheetPasswordInput').focus(), 50);
+        }
+
+        function closeSheetModal() {
+            document.getElementById('sheetModal').style.display = 'none';
+        }
+
+        function unlockSheetLink() {
+            const val = document.getElementById('sheetPasswordInput').value.trim();
+            const errorEl = document.getElementById('sheetError');
+            if (val === SHEET_PASS) {
+                errorEl.innerText = '';
+                document.getElementById('sheetAnchor').href = SHEET_EDIT_URL;
+                document.getElementById('sheetLinkBox').style.display = 'block';
+            } else {
+                errorEl.innerText = 'كلمة السر غير صحيحة';
+            }
+        }
+
+        function copySheetLink() {
+            navigator.clipboard.writeText(SHEET_EDIT_URL);
+        }
 
         function convertImageURL(url) {
             if (!url) return '';
